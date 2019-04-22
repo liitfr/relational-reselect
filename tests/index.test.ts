@@ -1,8 +1,8 @@
 import { createSelector } from "reselect";
 import { fromJS, Map } from "immutable";
 
-import Query from "../src";
-import { Tuple, State, Collection } from "../src/utils/types";
+import Query, { Tuple, State, Collection } from "../src";
+import { InvariantError } from "ts-invariant";
 
 const state = fromJS({
   customers: [
@@ -34,6 +34,10 @@ const state = fromJS({
     {
       id: 50,
       label: "computer"
+    },
+    {
+      id: 120,
+      label: "cellphone"
     }
   ]
 });
@@ -101,5 +105,79 @@ test("Use a query in another one", () => {
       { qCust: { fullName: "John Doe" } },
       { qCust: { fullName: "Homer Simpson" } }
     ])
+  );
+});
+
+const ordersSelector = (state: State) => state.get("orders");
+const productsSelector = (state: State) => state.get("products");
+
+const cartesianJoin = new Query()
+  .from(customersSelector, "customers")
+  .cartesian(ordersSelector, "orders")
+  .cartesian(productsSelector, "products");
+
+test("Use cartesian operation in a query", () => {
+  expect(cartesianJoin.run(state)).toEqual(
+    fromJS([
+      {
+        customers: { id: 1, firstName: "John", lastName: "Doe" },
+        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
+        products: { id: 50, label: "computer" }
+      },
+      {
+        customers: { id: 1, firstName: "John", lastName: "Doe" },
+        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
+        products: { id: 120, label: "cellphone" }
+      },
+      {
+        customers: { id: 2, firstName: "Homer", lastName: "Simpson" },
+        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
+        products: { id: 50, label: "computer" }
+      },
+      {
+        customers: { id: 2, firstName: "Homer", lastName: "Simpson" },
+        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
+        products: { id: 120, label: "cellphone" }
+      },
+      {
+        customers: { id: 3, firstName: "Bender", lastName: "Rodriguez" },
+        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
+        products: { id: 50, label: "computer" }
+      },
+      {
+        customers: { id: 3, firstName: "Bender", lastName: "Rodriguez" },
+        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
+        products: { id: 120, label: "cellphone" }
+      }
+    ])
+  );
+});
+
+const innerJoin = new Query()
+  .from(customersSelector, "cust")
+  .innerJoin(ordersSelector, "ord")
+  .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "custId"]))
+  .innerJoin(productsSelector, "prod")
+  .on(
+    tuple => tuple.getIn(["ord", "productId"]) === tuple.getIn(["prod", "id"])
+  );
+
+test("Use an inner join in a query", () => {
+  expect(innerJoin.run(state)).toEqual(
+    fromJS([
+      {
+        cust: { id: 1, firstName: "John", lastName: "Doe" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 50, label: "computer" }
+      }
+    ])
+  );
+});
+
+test("Can't use same alias more than once", () => {
+  expect(() =>
+    new Query().from(customersSelector, "a").cartesian(ordersSelector, "a")
+  ).toThrowError(
+    new InvariantError('alias "a" must not be used more than once')
   );
 });
