@@ -187,4 +187,14 @@ const leftJoin = new Query()
   .leftJoin(ordersSelector, "ord")
   .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "custId"]));
 
-console.log(leftJoin.run(state).toJS());
+test("Use a left join in a query", () => {
+  expect(leftJoin.run(state)).toEqual(
+    fromJS([
+      {
+        cust: { id: 1, firstName: "John", lastName: "Doe" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 }
+      },
+      { cust: { id: 2, firstName: "Homer", lastName: "Simpson" } }
+    ])
+  );
+});

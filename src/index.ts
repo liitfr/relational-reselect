@@ -112,13 +112,10 @@ abstract class FromNode extends RunableStatement implements Joinable {
       specification: SpecificationForMatchingTuples
     ) => (left: Collection, right: Collection) => {
       const inner = cartesian(left, right).filter(specification);
-      const outer = left.filter(lTuple => {
-        console.log("L", lTuple.toJS());
-        return !inner.find(iTuple => {
-          console.log("i", iTuple.toJS());
-          return iTuple.includes(lTuple);
-        });
-      });
+      const outer = left.filter(
+        (lTuple: Tuple) =>
+          !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple))
+      );
       return inner.concat(outer);
     };
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
