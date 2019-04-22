@@ -106,13 +106,25 @@ abstract class FromNode extends RunableStatement implements Joinable {
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  /*
   leftJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    return new IncompleteJoin(this.context, { dataSource, alias });
+    const behavior: Behavior = (
+      specification: SpecificationForMatchingTuples
+    ) => (left: Collection, right: Collection) => {
+      const inner = cartesian(left, right).filter(specification);
+      const outer = left.filter(lTuple => {
+        console.log("L", lTuple.toJS());
+        return !inner.find(iTuple => {
+          console.log("i", iTuple.toJS());
+          return iTuple.includes(lTuple);
+        });
+      });
+      return inner.concat(outer);
+    };
+    return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  /*rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     return new IncompleteJoin(this.context, { dataSource, alias });
   }
@@ -199,8 +211,8 @@ class IncompleteJoin extends Statement
 
 interface Joinable {
   innerJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  /* leftJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
+  leftJoin(dataSource: DataSource, alias: string): IncompleteJoin;
+  /*rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   except(dataSource: DataSource, alias: string): CompleteJoin;
   intersect(dataSource: DataSource, alias: string): CompleteJoin;
@@ -245,10 +257,11 @@ class Query implements Fromable, Runable, Selectable {
   }
 
   build() {
-    let selector: Selector = () => List();
-    if (this.fromSpec) {
-      selector = dataSourceNormalizer(this.fromSpec);
-    }
+    invariant(
+      this.fromSpec,
+      "There should be one and only one From statement in your query"
+    );
+    let selector: Selector = dataSourceNormalizer(this.fromSpec);
     if (this.joinSpec && this.joinSpec.length > 0) {
       this.joinSpec.forEach(
         ({ aliasedDataSource, joinSpec }) =>

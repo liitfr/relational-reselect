@@ -69,12 +69,12 @@ test("Use reselect on customers", () => {
   );
 });
 
-const customersQ = new Query().from(twoCustomersSelector, "customers");
+const customersQ = new Query().from(twoCustomersSelector, "cust");
 test("Run a query with a where on reselect", () => {
   expect(customersQ.run(state)).toEqual(
     fromJS([
-      { customers: { id: 1, firstName: "John", lastName: "Doe" } },
-      { customers: { id: 2, firstName: "Homer", lastName: "Simpson" } }
+      { cust: { id: 1, firstName: "John", lastName: "Doe" } },
+      { cust: { id: 2, firstName: "Homer", lastName: "Simpson" } }
     ])
   );
 });
@@ -112,49 +112,49 @@ const ordersSelector = (state: State) => state.get("orders");
 const productsSelector = (state: State) => state.get("products");
 
 const cartesianJoin = new Query()
-  .from(customersSelector, "customers")
-  .cartesian(ordersSelector, "orders")
-  .cartesian(productsSelector, "products");
+  .from(customersSelector, "cust")
+  .cartesian(ordersSelector, "ord")
+  .cartesian(productsSelector, "prod");
 
 test("Use cartesian operation in a query", () => {
   expect(cartesianJoin.run(state)).toEqual(
     fromJS([
       {
-        customers: { id: 1, firstName: "John", lastName: "Doe" },
-        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
-        products: { id: 50, label: "computer" }
+        cust: { id: 1, firstName: "John", lastName: "Doe" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 50, label: "computer" }
       },
       {
-        customers: { id: 1, firstName: "John", lastName: "Doe" },
-        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
-        products: { id: 120, label: "cellphone" }
+        cust: { id: 1, firstName: "John", lastName: "Doe" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 120, label: "cellphone" }
       },
       {
-        customers: { id: 2, firstName: "Homer", lastName: "Simpson" },
-        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
-        products: { id: 50, label: "computer" }
+        cust: { id: 2, firstName: "Homer", lastName: "Simpson" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 50, label: "computer" }
       },
       {
-        customers: { id: 2, firstName: "Homer", lastName: "Simpson" },
-        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
-        products: { id: 120, label: "cellphone" }
+        cust: { id: 2, firstName: "Homer", lastName: "Simpson" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 120, label: "cellphone" }
       },
       {
-        customers: { id: 3, firstName: "Bender", lastName: "Rodriguez" },
-        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
-        products: { id: 50, label: "computer" }
+        cust: { id: 3, firstName: "Bender", lastName: "Rodriguez" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 50, label: "computer" }
       },
       {
-        customers: { id: 3, firstName: "Bender", lastName: "Rodriguez" },
-        orders: { id: 100, custId: 1, productId: 50, qty: 3 },
-        products: { id: 120, label: "cellphone" }
+        cust: { id: 3, firstName: "Bender", lastName: "Rodriguez" },
+        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        prod: { id: 120, label: "cellphone" }
       }
     ])
   );
 });
 
 const innerJoin = new Query()
-  .from(customersSelector, "cust")
+  .from(twoCustomersSelector, "cust")
   .innerJoin(ordersSelector, "ord")
   .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "custId"]))
   .innerJoin(productsSelector, "prod")
@@ -181,3 +181,10 @@ test("Can't use same alias more than once", () => {
     new InvariantError('alias "a" must not be used more than once')
   );
 });
+
+const leftJoin = new Query()
+  .from(twoCustomersSelector, "cust")
+  .leftJoin(ordersSelector, "ord")
+  .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "custId"]));
+
+console.log(leftJoin.run(state).toJS());
