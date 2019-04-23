@@ -28,7 +28,7 @@
   "bugs": "https://github.com/liitfr/relational-reselect/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/liitfr/relational-reselect.git"
+    "url": "git@github.com:liitfr/relational-reselect.git"
   },
   "homepage": "https://github.com/liitfr/relational-reselect",
   "dependencies": {
