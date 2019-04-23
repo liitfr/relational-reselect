@@ -21,7 +21,8 @@
     "reselect",
     "join",
     "immutablejs",
-    "selector"
+    "selector",
+    "redux"
   ],
   "bugs": "https://github.com/liitfr/relational-reselect/issues",
   "repository": {

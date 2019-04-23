@@ -187,7 +187,7 @@ abstract class FromNode extends RunableStatement
     return new IncompleteJoin(this.context, { dataSource, alias });
   }*/
 
-  cartesian(dataSource: DataSource, alias: string): CompleteJoin {
+  public cartesian(dataSource: DataSource, alias: string): CompleteJoin {
     this.checkAlias(alias);
     this.context.addJoinSpec({
       aliasedDataSource: { dataSource, alias },
@@ -196,11 +196,11 @@ abstract class FromNode extends RunableStatement
     return new CompleteJoin(this.context);
   }
 
-  where(whereSpec: SpecificationForMatchingTuple) {
+  public where(whereSpec: SpecificationForMatchingTuple) {
     return new Where(this.context, whereSpec);
   }
 
-  orderBy(orderBySpec: SpecificationForOrderingTuples) {
+  public orderBy(orderBySpec: SpecificationForOrderingTuples) {
     return new OrderBy(this.context, orderBySpec);
   }
 }
@@ -265,7 +265,7 @@ class IncompleteJoin extends Statement
     this.behavior = behavior;
   }
 
-  on(specification: SpecificationForMatchingTuple): CompleteJoin {
+  public on(specification: SpecificationForMatchingTuple): CompleteJoin {
     this.specification = this.behavior(specification);
     this.context.addJoinSpec({
       aliasedDataSource: this.aliasedDataSource,
@@ -308,31 +308,31 @@ class Query implements Fromable, Runable, Selectable {
       : aliases;
   }
 
-  setSelectSpec(specification: SpecificationForTuple) {
+  public setSelectSpec(specification: SpecificationForTuple) {
     this.selectSpec = specification;
   }
 
-  setFromSpec(specification: AliasedDataSource) {
+  public setFromSpec(specification: AliasedDataSource) {
     this.fromSpec = specification;
   }
 
-  addJoinSpec(join: Join) {
+  public addJoinSpec(join: Join) {
     this.joinSpec.push(join);
   }
 
-  setWhereSpec(specification: SpecificationForMatchingTuple) {
+  public setWhereSpec(specification: SpecificationForMatchingTuple) {
     this.whereSpec = specification;
   }
 
-  setOrderBySpec(specification: SpecificationForOrderingTuples) {
+  public setOrderBySpec(specification: SpecificationForOrderingTuples) {
     this.orderBySpec = specification;
   }
 
-  select(selectSpec: SpecificationForTuple) {
+  public select(selectSpec: SpecificationForTuple) {
     return new Select(this, selectSpec);
   }
 
-  from(dataSource: DataSource, alias: string) {
+  public from(dataSource: DataSource, alias: string) {
     return new From(this, { dataSource, alias });
   }
 
@@ -373,11 +373,11 @@ class Query implements Fromable, Runable, Selectable {
     return selector;
   }
 
-  get(): Selector {
+  public get(): Selector {
     return this.build();
   }
 
-  run(state: State): Collection {
+  public run(state: State): Collection {
     return this.build()(state);
   }
 }
