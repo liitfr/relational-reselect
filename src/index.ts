@@ -5,13 +5,6 @@ import invariant from "ts-invariant";
 const getSelector = (dataSource: DataSource): Selector =>
   dataSource instanceof RunableStatement ? dataSource.get() : dataSource;
 
-const dataSourceNormalizer = (aliasedDataSource: AliasedDataSource): Selector =>
-  createSelector(
-    getSelector(aliasedDataSource.dataSource),
-    (collection: Collection): Collection =>
-      collection.map(item => Map({ [aliasedDataSource.alias]: item }))
-  );
-
 type Tuple = Map<string, any>;
 
 type Collection = List<Tuple>;
@@ -236,6 +229,14 @@ class Query implements Fromable, Runable, Selectable {
   private fromSpec: AliasedDataSource;
   private joinSpec: Join[] = [];
 
+  private dataSourceNormalizer(aliasedDataSource: AliasedDataSource): Selector {
+    return createSelector(
+      getSelector(aliasedDataSource.dataSource),
+      (collection: Collection): Collection =>
+        collection.map(item => Map({ [aliasedDataSource.alias]: item }))
+    );
+  }
+
   getAliases(): List<string> {
     const aliases = List().push(this.fromSpec.alias);
     return this.joinSpec
@@ -268,13 +269,13 @@ class Query implements Fromable, Runable, Selectable {
       this.fromSpec,
       "There should be one and only one From statement in your query"
     );
-    let selector: Selector = dataSourceNormalizer(this.fromSpec);
+    let selector: Selector = this.dataSourceNormalizer(this.fromSpec);
     if (this.joinSpec && this.joinSpec.length > 0) {
       this.joinSpec.forEach(
         ({ aliasedDataSource, joinSpec }) =>
           (selector = createSelector(
             selector,
-            dataSourceNormalizer(aliasedDataSource),
+            this.dataSourceNormalizer(aliasedDataSource),
             joinSpec
           ))
       );
