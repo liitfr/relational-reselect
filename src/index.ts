@@ -25,7 +25,7 @@ type SpecificationForJoiningCollections = (
   right: Collection
 ) => Collection;
 
-type SpecificationForMatchingTuples = (left: Tuple, right: Tuple) => boolean;
+type SpecificationForMatchingTuple = (tuple: Tuple) => boolean;
 
 type SpecificationForTuple = (tupe: Tuple) => Tuple;
 
@@ -83,14 +83,18 @@ type Join = {
   joinSpec: SpecificationForJoiningCollections;
 };
 
-const cartesian = (a: Collection, b?: Collection, ...c: Collection[]): any => {
-  const f = (a: any, b: any): any =>
-    List().concat(...a.map((d: any) => b.map((e: any) => d.merge(e))));
+const cartesian = (
+  a: Collection,
+  b?: Collection,
+  ...c: Collection[]
+): Collection => {
+  const f = (a: Collection, b: Collection): Collection =>
+    List().concat(...a.map((d: Tuple) => b.map((e: Tuple) => d.merge(e))));
   return b ? cartesian(f(a, b), ...c) : a;
 };
 
 const outerJoinBehaviorGenerator = (side: "left" | "right") => (
-  specification: SpecificationForMatchingTuples
+  specification: SpecificationForMatchingTuple
 ) => (left: Collection, right: Collection) => {
   const inner = cartesian(left, right).filter(specification);
   const outer = (side === "left" ? left : right).filter(
@@ -114,7 +118,7 @@ abstract class FromNode extends RunableStatement implements Joinable {
   innerJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     const behavior: Behavior = (
-      specification: SpecificationForMatchingTuples
+      specification: SpecificationForMatchingTuple
     ) => (left: Collection, right: Collection) =>
       cartesian(left, right).filter(specification);
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
@@ -183,7 +187,7 @@ interface Fromable {
 }
 
 type Behavior = (
-  specification: SpecificationForMatchingTuples
+  specification: SpecificationForMatchingTuple
 ) => SpecificationForJoiningCollections;
 
 class IncompleteJoin extends Statement
@@ -202,7 +206,7 @@ class IncompleteJoin extends Statement
     this.behavior = behavior;
   }
 
-  on(specification: SpecificationForMatchingTuples): CompleteJoin {
+  on(specification: SpecificationForMatchingTuple): CompleteJoin {
     this.specification = this.behavior(specification);
     this.context.addJoinSpec({
       aliasedDataSource: this.aliasedDataSource,
@@ -224,7 +228,7 @@ interface Joinable {
 }
 
 interface Onable {
-  on(specification: SpecificationForMatchingTuples): CompleteJoin;
+  on(specification: SpecificationForMatchingTuple): CompleteJoin;
 }
 
 class Query implements Fromable, Runable, Selectable {
