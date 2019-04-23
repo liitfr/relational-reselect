@@ -33,12 +33,12 @@
   },
   "devDependencies": {
     "@types/jest": "24.0.11",
+    "immutable": "4.0.0-rc.12",
     "jest": "24.7.1",
+    "reselect": "4.0.0",
     "rollup": "1.10.1",
     "rollup-plugin-typescript2": "0.20.1",
-    "typescript": "3.4.3",
-    "immutable": "4.0.0-rc.12",
-    "reselect": "4.0.0"
+    "typescript": "3.5.0-dev.20190423"
   },
   "peerDependencies": {
     "immutable": "^4.0.0-rc.12",

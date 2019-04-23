@@ -1,8 +1,6 @@
-import { List, Map, fromJS } from "immutable";
+import { List, Map } from "immutable";
 import { createSelector } from "reselect";
 import invariant from "ts-invariant";
-
-import { cartesian } from "./utils";
 
 const getSelector = (dataSource: DataSource): Selector =>
   dataSource instanceof RunableStatement ? dataSource.get() : dataSource;
@@ -83,6 +81,12 @@ type AliasedDataSource = {
 type Join = {
   aliasedDataSource: AliasedDataSource;
   joinSpec: SpecificationForJoiningCollections;
+};
+
+const cartesian = (a: Collection, b?: Collection, ...c: Collection[]): any => {
+  const f = (a: any, b: any): any =>
+    List().concat(...a.map((d: any) => b.map((e: any) => d.merge(e))));
+  return b ? cartesian(f(a, b), ...c) : a;
 };
 
 const outerJoinBehaviorGenerator = (side: "left" | "right") => (
