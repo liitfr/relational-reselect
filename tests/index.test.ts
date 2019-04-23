@@ -7,27 +7,41 @@ import { InvariantError } from 'ts-invariant';
 const state = fromJS({
   customers: [
     {
-      id: 1,
       firstName: 'John',
+      id: 1,
       lastName: 'Doe',
     },
     {
-      id: 2,
       firstName: 'Homer',
+      id: 2,
       lastName: 'Simpson',
     },
     {
-      id: 3,
       firstName: 'Bender',
+      id: 3,
       lastName: 'Rodriguez',
     },
   ],
   orders: [
     {
-      id: 100,
       custId: 1,
+      id: 100,
       productId: 50,
       qty: 3,
+    },
+  ],
+  orders2: [
+    {
+      customer: 1,
+      id: 100,
+      productId: 50,
+      qty: 3,
+    },
+    {
+      customer: 3,
+      id: 101,
+      productId: 120,
+      qty: 2,
     },
   ],
   products: [
@@ -38,20 +52,6 @@ const state = fromJS({
     {
       id: 120,
       label: 'cellphone',
-    },
-  ],
-  orders2: [
-    {
-      id: 100,
-      customer: 1,
-      productId: 50,
-      qty: 3,
-    },
-    {
-      id: 101,
-      customer: 3,
-      productId: 120,
-      qty: 2,
     },
   ],
 });
@@ -70,13 +70,13 @@ test('Use reselect on customers', () => {
   expect(twoCustomersSelector(state)).toEqual(
     fromJS([
       {
-        id: 1,
         firstName: 'John',
+        id: 1,
         lastName: 'Doe',
       },
       {
-        id: 2,
         firstName: 'Homer',
+        id: 2,
         lastName: 'Simpson',
       },
     ]),
@@ -87,8 +87,8 @@ const customersQ = new Query().from(twoCustomersSelector, 'cust');
 test('Run a query with a where on reselect', () => {
   expect(customersQ.run(state)).toEqual(
     fromJS([
-      { cust: { id: 1, firstName: 'John', lastName: 'Doe' } },
-      { cust: { id: 2, firstName: 'Homer', lastName: 'Simpson' } },
+      { cust: { firstName: 'John', id: 1, lastName: 'Doe' } },
+      { cust: { firstName: 'Homer', id: 2, lastName: 'Simpson' } },
     ]),
   );
 });
@@ -134,33 +134,33 @@ test('Use cartesian operation in a query', () => {
   expect(cartesianJoin.run(state)).toEqual(
     fromJS([
       {
-        cust: { id: 1, firstName: 'John', lastName: 'Doe' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'John', id: 1, lastName: 'Doe' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 50, label: 'computer' },
       },
       {
-        cust: { id: 1, firstName: 'John', lastName: 'Doe' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'John', id: 1, lastName: 'Doe' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 120, label: 'cellphone' },
       },
       {
-        cust: { id: 2, firstName: 'Homer', lastName: 'Simpson' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'Homer', id: 2, lastName: 'Simpson' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 50, label: 'computer' },
       },
       {
-        cust: { id: 2, firstName: 'Homer', lastName: 'Simpson' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'Homer', id: 2, lastName: 'Simpson' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 120, label: 'cellphone' },
       },
       {
-        cust: { id: 3, firstName: 'Bender', lastName: 'Rodriguez' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'Bender', id: 3, lastName: 'Rodriguez' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 50, label: 'computer' },
       },
       {
-        cust: { id: 3, firstName: 'Bender', lastName: 'Rodriguez' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'Bender', id: 3, lastName: 'Rodriguez' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 120, label: 'cellphone' },
       },
     ]),
@@ -180,8 +180,8 @@ test('Use an inner join in a query', () => {
   expect(innerJoin.run(state)).toEqual(
     fromJS([
       {
-        cust: { id: 1, firstName: 'John', lastName: 'Doe' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'John', id: 1, lastName: 'Doe' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
         prod: { id: 50, label: 'computer' },
       },
     ]),
@@ -205,10 +205,10 @@ test('Use a left join in a query', () => {
   expect(leftJoin.run(state)).toEqual(
     fromJS([
       {
-        cust: { id: 1, firstName: 'John', lastName: 'Doe' },
-        ord: { id: 100, custId: 1, productId: 50, qty: 3 },
+        cust: { firstName: 'John', id: 1, lastName: 'Doe' },
+        ord: { custId: 1, id: 100, productId: 50, qty: 3 },
       },
-      { cust: { id: 2, firstName: 'Homer', lastName: 'Simpson' } },
+      { cust: { firstName: 'Homer', id: 2, lastName: 'Simpson' } },
     ]),
   );
 });

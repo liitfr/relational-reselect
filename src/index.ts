@@ -308,31 +308,31 @@ class Query implements Fromable, Runable, Selectable {
       : aliases;
   }
 
-  public setSelectSpec(specification: SpecificationForTuple) {
+  public setSelectSpec(specification: SpecificationForTuple): void {
     this.selectSpec = specification;
   }
 
-  public setFromSpec(specification: AliasedDataSource) {
+  public setFromSpec(specification: AliasedDataSource): void {
     this.fromSpec = specification;
   }
 
-  public addJoinSpec(join: Join) {
+  public addJoinSpec(join: Join): void {
     this.joinSpec.push(join);
   }
 
-  public setWhereSpec(specification: SpecificationForMatchingTuple) {
+  public setWhereSpec(specification: SpecificationForMatchingTuple): void {
     this.whereSpec = specification;
   }
 
-  public setOrderBySpec(specification: SpecificationForOrderingTuples) {
+  public setOrderBySpec(specification: SpecificationForOrderingTuples): void {
     this.orderBySpec = specification;
   }
 
-  public select(selectSpec: SpecificationForTuple) {
+  public select(selectSpec: SpecificationForTuple): Select {
     return new Select(this, selectSpec);
   }
 
-  public from(dataSource: DataSource, alias: string) {
+  public from(dataSource: DataSource, alias: string): From {
     return new From(this, { dataSource, alias });
   }
 
@@ -391,7 +391,7 @@ class Select extends Statement implements Fromable, SpecStatement {
     this.context.setSelectSpec(this.specification);
   }
 
-  from(dataSource: DataSource, alias: string) {
+  from(dataSource: DataSource, alias: string): From {
     return new From(this.context, { dataSource, alias });
   }
 }
