@@ -1,6 +1,6 @@
-import { List, Map } from "immutable";
-import { createSelector } from "reselect";
-import invariant from "ts-invariant";
+import { List, Map } from 'immutable';
+import { createSelector } from 'reselect';
+import invariant from 'ts-invariant';
 
 //------------------------------------------------------------------------------
 // Utils
@@ -16,12 +16,12 @@ const cartesian = (
   return b ? cartesian(f(a, b), ...c) : a;
 };
 
-const outerJoinBehaviorGenerator = (side: "left" | "right") => (
-  specification: SpecificationForMatchingTuple
+const outerJoinBehaviorGenerator = (side: 'left' | 'right') => (
+  specification: SpecificationForMatchingTuple,
 ) => (left: Collection, right: Collection) => {
   const inner = cartesian(left, right).filter(specification);
-  const outer = (side === "left" ? left : right).filter(
-    (lTuple: Tuple) => !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple))
+  const outer = (side === 'left' ? left : right).filter(
+    (lTuple: Tuple) => !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple)),
   );
   return inner.concat(outer);
 };
@@ -40,7 +40,7 @@ type Selector = (state: State) => Collection;
 
 type SpecificationForJoiningCollections = (
   left: Collection,
-  right: Collection
+  right: Collection,
 ) => Collection;
 
 type SpecificationForMatchingTuple = (tuple: Tuple) => boolean;
@@ -56,7 +56,7 @@ type StatementSpecification =
   | SpecificationForOrderingTuples;
 
 type Behavior = (
-  specification: SpecificationForMatchingTuple
+  specification: SpecificationForMatchingTuple,
 ) => SpecificationForJoiningCollections;
 
 type DataSource = RunableStatement | Selector;
@@ -142,14 +142,14 @@ abstract class FromNode extends RunableStatement
   checkAlias(alias: string) {
     return invariant(
       !this.context.getAliases().includes(alias),
-      `alias "${alias}" must not be used more than once`
+      `alias "${alias}" must not be used more than once`,
     );
   }
 
   innerJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     const behavior: Behavior = (
-      specification: SpecificationForMatchingTuple
+      specification: SpecificationForMatchingTuple,
     ) => (left: Collection, right: Collection) =>
       cartesian(left, right).filter(specification);
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
@@ -157,13 +157,13 @@ abstract class FromNode extends RunableStatement
 
   leftJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    const behavior = outerJoinBehaviorGenerator("left");
+    const behavior = outerJoinBehaviorGenerator('left');
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
   rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    const behavior = outerJoinBehaviorGenerator("right");
+    const behavior = outerJoinBehaviorGenerator('right');
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
@@ -191,7 +191,7 @@ abstract class FromNode extends RunableStatement
     this.checkAlias(alias);
     this.context.addJoinSpec({
       aliasedDataSource: { dataSource, alias },
-      joinSpec: (left: Collection, right: Collection) => cartesian(left, right)
+      joinSpec: (left: Collection, right: Collection) => cartesian(left, right),
     });
     return new CompleteJoin(this.context);
   }
@@ -258,7 +258,7 @@ class IncompleteJoin extends Statement
   constructor(
     context: Query,
     aliasedDataSource: AliasedDataSource,
-    behavior: Behavior
+    behavior: Behavior,
   ) {
     super(context);
     this.aliasedDataSource = aliasedDataSource;
@@ -269,7 +269,7 @@ class IncompleteJoin extends Statement
     this.specification = this.behavior(specification);
     this.context.addJoinSpec({
       aliasedDataSource: this.aliasedDataSource,
-      joinSpec: this.specification
+      joinSpec: this.specification,
     });
     return new CompleteJoin(this.context);
   }
@@ -297,7 +297,7 @@ class Query implements Fromable, Runable, Selectable {
     return createSelector(
       getSelector(aliasedDataSource.dataSource),
       (collection: Collection): Collection =>
-        collection.map(item => Map({ [aliasedDataSource.alias]: item }))
+        collection.map(item => Map({ [aliasedDataSource.alias]: item })),
     );
   }
 
@@ -339,7 +339,7 @@ class Query implements Fromable, Runable, Selectable {
   private build(): Selector {
     invariant(
       this.fromSpec,
-      "There should be one and only one From statement in your query"
+      'There should be one and only one From statement in your query',
     );
     let selector: Selector = this.dataSourceNormalizer(this.fromSpec);
     if (this.joinSpec && this.joinSpec.length > 0) {
@@ -348,26 +348,26 @@ class Query implements Fromable, Runable, Selectable {
           (selector = createSelector(
             selector,
             this.dataSourceNormalizer(aliasedDataSource),
-            joinSpec
-          ))
+            joinSpec,
+          )),
       );
     }
     if (this.selectSpec) {
       selector = createSelector(
         selector,
-        collection => collection.map(this.selectSpec)
+        collection => collection.map(this.selectSpec),
       );
     }
     if (this.whereSpec) {
       selector = createSelector(
         selector,
-        collection => collection.filter(this.whereSpec)
+        collection => collection.filter(this.whereSpec),
       );
     }
     if (this.orderBySpec) {
       selector = createSelector(
         selector,
-        collection => collection.sort(this.orderBySpec)
+        collection => collection.sort(this.orderBySpec),
       );
     }
     return selector;

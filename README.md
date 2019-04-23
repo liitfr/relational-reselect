@@ -6,21 +6,21 @@
 With its decarative style, this library aims to facilitate creation of complex selectors on a normalized store that imposes to perform joins, lookups, relationships, or whatever you call it !
 
 ```js
-import { createSelector } from "reselect";
-import Query from "relational-reselect";
+import { createSelector } from 'reselect';
+import Query from 'relational-reselect';
 
-const ordersSelector = state => state.get("orders");
+const ordersSelector = state => state.get('orders');
 const ordersFrSelector = createSelector(
   ordersSelector,
-  orders => orders.filter(order => order.get("country") === "fr")
+  orders => orders.filter(order => order.get('country') === 'fr'),
 );
-const customersSelector = state => state.get("customers");
+const customersSelector = state => state.get('customers');
 
 const salesReportFrSelector = new Query()
-  .from(customersSelector, "cust")
-  .innerJoin(ordersFrSelector, "ord")
+  .from(customersSelector, 'cust')
+  .innerJoin(ordersFrSelector, 'ord')
   .on(
-    tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "customer"])
+    tuple => tuple.getIn(['cust', 'id']) === tuple.getIn(['ord', 'customer']),
   );
 
 salesReportFrSelector.run(state);
@@ -70,8 +70,8 @@ Optional step, it will proceed over from`` or select
 
 ## State Machine Diagram
 
-![State Machine diagram](./docs/state.jpg?raw=true "State Machine diagram")
+![State Machine diagram](./docs/state.jpg?raw=true 'State Machine diagram')
 
 ## Class Diagram
 
-![Class diagram](./docs/class.jpg?raw=true "Class diagram")
+![Class diagram](./docs/class.jpg?raw=true 'Class diagram')
