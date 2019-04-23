@@ -1,4 +1,5 @@
 language: node_js
 node_js:
-  - "node"
-  - "lts/*"
+  - 'node'
+  - 'lts/*'
+script: npm run-script test-ci

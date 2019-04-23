@@ -11,7 +11,8 @@
   "scripts": {
     "build": "npm run test && rollup -c",
     "watch": "rollup -cw",
-    "test": "jest --coverage --coverageReporters=text-lcov | coveralls"
+    "test": "jest",
+    "test-ci": "jest --coverage --coverageReporters=text-lcov | coveralls"
   },
   "author": "Mathias Hoffmann <hello@liit.fr> (https://liit.fr)",
   "license": "MIT",
