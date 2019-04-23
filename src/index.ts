@@ -290,18 +290,7 @@ class Query implements Fromable, Runable, Selectable {
   private whereSpec: SpecificationForMatchingTuple;
   private orderBySpec: SpecificationForOrderingTuples;
 
-  private dataSourceNormalizer(aliasedDataSource: AliasedDataSource): Selector {
-    const getSelector = (dataSource: DataSource): Selector =>
-      dataSource instanceof RunableStatement ? dataSource.get() : dataSource;
-
-    return createSelector(
-      getSelector(aliasedDataSource.dataSource),
-      (collection: Collection): Collection =>
-        collection.map(item => Map({ [aliasedDataSource.alias]: item })),
-    );
-  }
-
-  getAliases(): List<string> {
+  public getAliases(): List<string> {
     const aliases = List().push(this.fromSpec.alias);
     return this.joinSpec
       ? aliases.push(this.joinSpec.map(join => join.aliasedDataSource.alias))
@@ -336,13 +325,24 @@ class Query implements Fromable, Runable, Selectable {
     return new From(this, { dataSource, alias });
   }
 
+  private dataSourceNormalizer(aliasedDataSource: AliasedDataSource): Selector {
+    const getSelector = (dataSource: DataSource): Selector =>
+      dataSource instanceof RunableStatement ? dataSource.get() : dataSource;
+
+    return createSelector(
+      getSelector(aliasedDataSource.dataSource),
+      (collection: Collection): Collection =>
+        collection.map(item => Map({ [aliasedDataSource.alias]: item })),
+    );
+  }
+
   private build(): Selector {
     invariant(
       this.fromSpec,
       'There should be one and only one From statement in your query',
     );
     let selector: Selector = this.dataSourceNormalizer(this.fromSpec);
-    if (this.joinSpec && this.joinSpec.length > 0) {
+    if (this.joinSpec && this.joinSpec.length) {
       this.joinSpec.forEach(
         ({ aliasedDataSource, joinSpec }) =>
           (selector = createSelector(
@@ -391,7 +391,7 @@ class Select extends Statement implements Fromable, SpecStatement {
     this.context.setSelectSpec(this.specification);
   }
 
-  from(dataSource: DataSource, alias: string): From {
+  public from(dataSource: DataSource, alias: string): From {
     return new From(this.context, { dataSource, alias });
   }
 }
