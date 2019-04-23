@@ -1,0 +1,11 @@
+.git/
+.rpt2_cache/
+node_modules/
+src/
+tests/
+.editorconfig
+.gitignore
+.travis.yml
+jest.config.js
+rollup.config.js
+tsconfig.json

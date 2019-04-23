@@ -2,19 +2,46 @@
   "name": "relational-reselect",
   "version": "1.0.0",
   "description": "A declarative way to express queries with reselect",
-  "main": "index.html",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
   "scripts": {
-    "start": "parcel index.html --open",
-    "build": "parcel build index.html",
+    "build": "rollup -c",
+    "watch": "rollup -cw",
     "test": "jest"
   },
+  "author": "Mathias Hoffmann <hello@liit.fr> (https://liit.fr)",
+  "license": "MIT",
+  "keywords": [
+    "relationship",
+    "relational-algebra",
+    "reselect",
+    "join",
+    "immutablejs"
+  ],
+  "bugs": "https://github.com/liitfr/relational-reselect/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liitfr/relational-reselect.git"
+  },
+  "homepage": "https://github.com/liitfr/relational-reselect",
   "dependencies": {
-    "immutable": "4.0.0-rc.12",
-    "reselect": "4.0.0",
     "ts-invariant": "0.4.0"
   },
   "devDependencies": {
-    "jest": "^24.7.1",
-    "parcel-bundler": "^1.6.1"
+    "@types/jest": "24.0.11",
+    "jest": "24.7.1",
+    "rollup": "1.10.1",
+    "rollup-plugin-typescript2": "0.20.1",
+    "typescript": "3.4.3",
+    "immutable": "4.0.0-rc.12",
+    "reselect": "4.0.0"
+  },
+  "peerDependencies": {
+    "immutable": "^4.0.0-rc.12",
+    "reselect": "^4.0.0"
   }
 }
