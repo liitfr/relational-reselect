@@ -10,6 +10,6 @@ TODO: no dependencies, david, deploy np, codesandbox
 
 TODO
 
-## uml graph
+## Class diagram
 
-TODO
+![Class diagram](./docs/class.jpg?raw=true "Class diagram")
