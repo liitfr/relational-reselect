@@ -85,6 +85,16 @@ type Join = {
   joinSpec: SpecificationForJoiningCollections;
 };
 
+const outerJoinBehaviorGenerator = (side: "left" | "right") => (
+  specification: SpecificationForMatchingTuples
+) => (left: Collection, right: Collection) => {
+  const inner = cartesian(left, right).filter(specification);
+  const outer = (side === "left" ? left : right).filter(
+    (lTuple: Tuple) => !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple))
+  );
+  return inner.concat(outer);
+};
+
 abstract class FromNode extends RunableStatement implements Joinable {
   constructor(context: Query) {
     super(context);
@@ -108,25 +118,17 @@ abstract class FromNode extends RunableStatement implements Joinable {
 
   leftJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    const behavior: Behavior = (
-      specification: SpecificationForMatchingTuples
-    ) => (left: Collection, right: Collection) => {
-      const inner = cartesian(left, right).filter(specification);
-      const outer = left.filter(
-        (lTuple: Tuple) =>
-          !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple))
-      );
-      return inner.concat(outer);
-    };
+    const behavior = outerJoinBehaviorGenerator("left");
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  /*rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    return new IncompleteJoin(this.context, { dataSource, alias });
+    const behavior = outerJoinBehaviorGenerator("right");
+    return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  fullJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  /*fullJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     return new IncompleteJoin(this.context, { dataSource, alias });
   }
@@ -209,8 +211,8 @@ class IncompleteJoin extends Statement
 interface Joinable {
   innerJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   leftJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  /*rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
+  rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
+  /*fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   except(dataSource: DataSource, alias: string): CompleteJoin;
   intersect(dataSource: DataSource, alias: string): CompleteJoin;
   union(dataSource: DataSource, alias: string): CompleteJoin;*/

@@ -198,3 +198,12 @@ test("Use a left join in a query", () => {
     ])
   );
 });
+
+const rightJoin = new Query()
+  .from(ordersSelector, "ord")
+  .rightJoin(twoCustomersSelector, "cust")
+  .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "custId"]));
+
+test("Use a right join in a query", () => {
+  expect(rightJoin.run(state).toJS()).toEqual(leftJoin.run(state).toJS());
+});
