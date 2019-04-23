@@ -105,11 +105,11 @@ abstract class RunableStatement extends Statement implements Runable {
     super(context);
   }
 
-  run(state: State): Collection {
+  public run(state: State): Collection {
     return this.context.run(state);
   }
 
-  get(): Selector {
+  public get(): Selector {
     return this.context.get();
   }
 }
