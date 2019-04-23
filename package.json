@@ -20,7 +20,8 @@
     "relational-algebra",
     "reselect",
     "join",
-    "immutablejs"
+    "immutablejs",
+    "selector"
   ],
   "bugs": "https://github.com/liitfr/relational-reselect/issues",
   "repository": {
