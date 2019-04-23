@@ -139,14 +139,7 @@ abstract class FromNode extends RunableStatement
     super(context);
   }
 
-  checkAlias(alias: string) {
-    return invariant(
-      !this.context.getAliases().includes(alias),
-      `alias "${alias}" must not be used more than once`,
-    );
-  }
-
-  innerJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  public innerJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     const behavior: Behavior = (
       specification: SpecificationForMatchingTuple,
@@ -155,13 +148,13 @@ abstract class FromNode extends RunableStatement
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  leftJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  public leftJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     const behavior = outerJoinBehaviorGenerator('left');
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  public rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     const behavior = outerJoinBehaviorGenerator('right');
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
@@ -196,12 +189,19 @@ abstract class FromNode extends RunableStatement
     return new CompleteJoin(this.context);
   }
 
-  public where(whereSpec: SpecificationForMatchingTuple) {
+  public where(whereSpec: SpecificationForMatchingTuple): Where {
     return new Where(this.context, whereSpec);
   }
 
-  public orderBy(orderBySpec: SpecificationForOrderingTuples) {
+  public orderBy(orderBySpec: SpecificationForOrderingTuples): OrderBy {
     return new OrderBy(this.context, orderBySpec);
+  }
+
+  private checkAlias(alias: string): void {
+    invariant(
+      !this.context.getAliases().includes(alias),
+      `alias "${alias}" must not be used more than once`,
+    );
   }
 }
 
@@ -230,7 +230,7 @@ class Where extends RunableStatement implements SpecStatement, OrderByable {
     this.context.setWhereSpec(this.specification);
   }
 
-  orderBy(orderBySpec: SpecificationForOrderingTuples) {
+  public orderBy(orderBySpec: SpecificationForOrderingTuples): OrderBy {
     return new OrderBy(this.context, orderBySpec);
   }
 }
@@ -252,8 +252,8 @@ interface Onable {
 class IncompleteJoin extends Statement
   implements AliasedDataSourceStatement, Onable, SpecStatement {
   aliasedDataSource: AliasedDataSource;
-  behavior: Behavior;
   specification: SpecificationForJoiningCollections;
+  private behavior: Behavior;
 
   constructor(
     context: Query,
@@ -325,6 +325,14 @@ class Query implements Fromable, Runable, Selectable {
     return new From(this, { dataSource, alias });
   }
 
+  public get(): Selector {
+    return this.build();
+  }
+
+  public run(state: State): Collection {
+    return this.build()(state);
+  }
+
   private dataSourceNormalizer(aliasedDataSource: AliasedDataSource): Selector {
     const getSelector = (dataSource: DataSource): Selector =>
       dataSource instanceof RunableStatement ? dataSource.get() : dataSource;
@@ -371,14 +379,6 @@ class Query implements Fromable, Runable, Selectable {
       );
     }
     return selector;
-  }
-
-  public get(): Selector {
-    return this.build();
-  }
-
-  public run(state: State): Collection {
-    return this.build()(state);
   }
 }
 
