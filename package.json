@@ -9,7 +9,7 @@
   ],
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "npm run test && rollup -c",
     "watch": "rollup -cw",
     "test": "jest"
   },
@@ -38,6 +38,7 @@
     "reselect": "4.0.0",
     "rollup": "1.10.1",
     "rollup-plugin-typescript2": "0.20.1",
+    "ts-jest": "24.0.2",
     "typescript": "3.5.0-dev.20190423"
   },
   "peerDependencies": {
