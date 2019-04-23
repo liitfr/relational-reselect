@@ -39,6 +39,20 @@ const state = fromJS({
       id: 120,
       label: "cellphone"
     }
+  ],
+  orders2: [
+    {
+      id: 100,
+      customer: 1,
+      productId: 50,
+      qty: 3
+    },
+    {
+      id: 101,
+      customer: 3,
+      productId: 120,
+      qty: 2
+    }
   ]
 });
 
@@ -206,4 +220,80 @@ const rightJoin = new Query()
 
 test("Use a right join in a query", () => {
   expect(rightJoin.run(state).toJS()).toEqual(leftJoin.run(state).toJS());
+});
+
+const ordersSelector2 = (state: State) => state.get("orders2");
+
+const whereJoin = new Query()
+  .select(tuple =>
+    tuple.setIn(
+      ["cust", "fullName"],
+      `${tuple.getIn(["cust", "firstName"])} ${tuple.getIn([
+        "cust",
+        "lastName"
+      ])}`
+    )
+  )
+  .from(customersSelector, "cust")
+  .innerJoin(ordersSelector2, "ord")
+  .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "customer"]))
+  .where(tuple => tuple.getIn(["cust", "fullName"]) === "Bender Rodriguez");
+
+test("Use a where and a select in a query", () => {
+  expect(whereJoin.run(state).toJS()).toEqual([
+    {
+      cust: {
+        firstName: "Bender",
+        fullName: "Bender Rodriguez",
+        id: 3,
+        lastName: "Rodriguez"
+      },
+      ord: {
+        customer: 3,
+        id: 101,
+        productId: 120,
+        qty: 2
+      }
+    }
+  ]);
+});
+
+const orderByJoin = new Query()
+  .from(customersSelector, "cust")
+  .innerJoin(ordersSelector2, "ord")
+  .on(tuple => tuple.getIn(["cust", "id"]) === tuple.getIn(["ord", "customer"]))
+  .orderBy(
+    (leftT, rightT) =>
+      rightT.getIn(["cust", "id"]) - leftT.getIn(["cust", "id"])
+  );
+
+test("Use a orderBy in a query", () => {
+  expect(orderByJoin.run(state).toJS()).toEqual([
+    {
+      cust: {
+        firstName: "Bender",
+        id: 3,
+        lastName: "Rodriguez"
+      },
+      ord: {
+        customer: 3,
+        id: 101,
+        productId: 120,
+        qty: 2
+      }
+    },
+    {
+      cust: {
+        firstName: "John",
+        id: 1,
+        lastName: "Doe"
+      },
+      ord: {
+        customer: 1,
+        id: 100,
+        productId: 50,
+        qty: 3
+      }
+    }
+  ]);
 });

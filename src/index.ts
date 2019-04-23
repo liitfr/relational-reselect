@@ -47,13 +47,13 @@ type SpecificationForMatchingTuple = (tuple: Tuple) => boolean;
 
 type SpecificationForOrderingTuples = (left: Tuple, right: Tuple) => number;
 
-type SpecificationForGroupingTuples = (tuple: Tuple) => any;
-
 type SpecificationForTuple = (tuple: Tuple) => Tuple;
 
 type StatementSpecification =
   | SpecificationForJoiningCollections
-  | SpecificationForTuple;
+  | SpecificationForTuple
+  | SpecificationForMatchingTuple
+  | SpecificationForOrderingTuples;
 
 type Behavior = (
   specification: SpecificationForMatchingTuple
@@ -126,19 +126,15 @@ interface Joinable {
 }
 
 interface Whereable {
-  where(): Where;
+  where(whereSpec: SpecificationForMatchingTuple): Where;
 }
 
 interface OrderByable {
-  orderBy(): OrderBy;
-}
-
-interface GroupByable {
-  groupBy(): GroupBy;
+  orderBy(orderBySpec: SpecificationForOrderingTuples): OrderBy;
 }
 
 abstract class FromNode extends RunableStatement
-  implements Joinable, Whereable, OrderByable, GroupByable {
+  implements Joinable, Whereable, OrderByable {
   constructor(context: Query) {
     super(context);
   }
@@ -199,6 +195,14 @@ abstract class FromNode extends RunableStatement
     });
     return new CompleteJoin(this.context);
   }
+
+  where(whereSpec: SpecificationForMatchingTuple) {
+    return new Where(this.context, whereSpec);
+  }
+
+  orderBy(orderBySpec: SpecificationForOrderingTuples) {
+    return new OrderBy(this.context, orderBySpec);
+  }
 }
 
 class CompleteJoin extends FromNode {
@@ -217,11 +221,29 @@ class From extends FromNode implements AliasedDataSourceStatement {
   }
 }
 
-class Where extends RunableStatement implements OrderByable, GroupByable {}
+class Where extends RunableStatement implements SpecStatement, OrderByable {
+  specification: SpecificationForMatchingTuple;
 
-class OrderByable extends RunableStatement implements GroupByable {}
+  constructor(context: Query, specification: SpecificationForMatchingTuple) {
+    super(context);
+    this.specification = specification;
+    this.context.setWhereSpec(this.specification);
+  }
 
-class GroupByable extends RunableStatement {}
+  orderBy(orderBySpec: SpecificationForOrderingTuples) {
+    return new OrderBy(this.context, orderBySpec);
+  }
+}
+
+class OrderBy extends RunableStatement implements SpecStatement {
+  specification: SpecificationForOrderingTuples;
+
+  constructor(context: Query, specification: SpecificationForOrderingTuples) {
+    super(context);
+    this.specification = specification;
+    this.context.setOrderBySpec(this.specification);
+  }
+}
 
 interface Onable {
   on(specification: SpecificationForMatchingTuple): CompleteJoin;
@@ -267,7 +289,6 @@ class Query implements Fromable, Runable, Selectable {
   private joinSpec: Join[] = [];
   private whereSpec: SpecificationForMatchingTuple;
   private orderBySpec: SpecificationForOrderingTuples;
-  private groupBySpec: SpecificationForGroupingTuples;
 
   private dataSourceNormalizer(aliasedDataSource: AliasedDataSource): Selector {
     const getSelector = (dataSource: DataSource): Selector =>
@@ -307,10 +328,6 @@ class Query implements Fromable, Runable, Selectable {
     this.orderBySpec = specification;
   }
 
-  setGroupBySpec(specification: SpecificationForGroupingTuples) {
-    this.groupBySpec = specification;
-  }
-
   select(selectSpec: SpecificationForTuple) {
     return new Select(this, selectSpec);
   }
@@ -319,7 +336,7 @@ class Query implements Fromable, Runable, Selectable {
     return new From(this, { dataSource, alias });
   }
 
-  private build() {
+  private build(): Selector {
     invariant(
       this.fromSpec,
       "There should be one and only one From statement in your query"
@@ -351,12 +368,6 @@ class Query implements Fromable, Runable, Selectable {
       selector = createSelector(
         selector,
         collection => collection.sort(this.orderBySpec)
-      );
-    }
-    if (this.groupBySpec) {
-      selector = createSelector(
-        selector,
-        collection => collection.groupBy(this.groupBySpec)
       );
     }
     return selector;
