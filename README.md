@@ -1,4 +1,4 @@
-# relational-reselect
+# relational-reselect (💥 WIP)
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7112f798a4e247c78d531d54a7468837)](https://app.codacy.com/app/liitfr/relational-reselect?utm_source=github.com&utm_medium=referral&utm_content=liitfr/relational-reselect&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/liitfr/relational-reselect.svg?branch=master)](https://travis-ci.org/liitfr/relational-reselect)
@@ -28,6 +28,12 @@ salesReportFrSelector.run(state);
 ```
 
 other examples are available on dedicated [CodeSandbox](https://codesandbox.io/s/427q264yv0)
+
+## Install
+
+```js
+npm install --save relational-reselect
+```
 
 ## API
 
