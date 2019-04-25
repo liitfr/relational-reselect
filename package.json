@@ -10,7 +10,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "npm run test && rollup -c",
-    "watch": "rollup -cw",
+    "prepublishOnly": "npm run build",
     "test": "jest",
     "test-ci": "jest --coverage --coverageReporters=text-lcov | coveralls"
   },
