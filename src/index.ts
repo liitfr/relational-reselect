@@ -184,16 +184,13 @@ abstract class FromNode extends RunableStatement
     const alias: string = this.context.getAliases().last();
     this.context.addJoinSpec({
       aliasedDataSource: { dataSource, alias },
-      joinSpec: (left: Collection, right: Collection) => {
-        console.log(left.toJS());
-        return left.filter(lTuple => right.contains(lTuple));
-      },
+      joinSpec: (left: Collection, right: Collection) =>
+        left.filter(lTuple => right.contains(lTuple)),
     });
     return new CompleteJoin(this.context);
   }
 
   public union(dataSource: DataSource): CompleteJoin {
-    console.log(this.context.getAliases().toJS());
     const alias: string = this.context.getAliases().last();
     this.context.addJoinSpec({
       aliasedDataSource: { dataSource, alias },
