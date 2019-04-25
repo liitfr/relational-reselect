@@ -16,16 +16,6 @@ const cartesian = (
   return b ? cartesian(f(a, b), ...c) : a;
 };
 
-const outerJoinBehaviorGenerator = (side: 'left' | 'right') => (
-  specification: SpecificationForMatchingTuple,
-) => (left: Collection, right: Collection) => {
-  const inner = cartesian(left, right).filter(specification);
-  const outer = (side === 'left' ? left : right).filter(
-    (lTuple: Tuple) => !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple)),
-  );
-  return inner.concat(outer);
-};
-
 //------------------------------------------------------------------------------
 // Types
 //------------------------------------------------------------------------------
@@ -70,6 +60,9 @@ type Join = {
   aliasedDataSource: AliasedDataSource;
   joinSpec: SpecificationForJoiningCollections;
 };
+
+const LEFT = Symbol('left');
+const RIGHT = Symbol('right');
 
 //------------------------------------------------------------------------------
 // Model
@@ -118,8 +111,8 @@ interface Joinable {
   innerJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   leftJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  /*fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  except(dataSource: DataSource, alias: string): CompleteJoin;
+  fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
+  /*except(dataSource: DataSource, alias: string): CompleteJoin;
   intersect(dataSource: DataSource, alias: string): CompleteJoin;
   union(dataSource: DataSource, alias: string): CompleteJoin;*/
   cartesian(dataSource: DataSource, alias: string): CompleteJoin;
@@ -150,22 +143,23 @@ abstract class FromNode extends RunableStatement
 
   public leftJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    const behavior = outerJoinBehaviorGenerator('left');
+    const behavior = FromNode.outerJoinBehaviorGenerator([LEFT]);
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
   public rightJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    const behavior = outerJoinBehaviorGenerator('right');
+    const behavior = FromNode.outerJoinBehaviorGenerator([RIGHT]);
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  /*fullJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  fullJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
-    return new IncompleteJoin(this.context, { dataSource, alias });
+    const behavior = FromNode.outerJoinBehaviorGenerator([LEFT, RIGHT]);
+    return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  except(dataSource: DataSource, alias: string): CompleteJoin {
+  /*except(dataSource: DataSource, alias: string): CompleteJoin {
     this.checkAlias(alias);
     return new IncompleteJoin(this.context, { dataSource, alias });
   }
@@ -195,6 +189,22 @@ abstract class FromNode extends RunableStatement
 
   public orderBy(orderBySpec: SpecificationForOrderingTuples): OrderBy {
     return new OrderBy(this.context, orderBySpec);
+  }
+
+  private static outerJoinBehaviorGenerator(sides: Symbol[]) {
+    return (specification: SpecificationForMatchingTuple) => (
+      left: Collection,
+      right: Collection,
+    ) => {
+      const inner = cartesian(left, right).filter(specification);
+      const outers = sides.map(side =>
+        (side === LEFT ? left : right).filter(
+          (lTuple: Tuple) =>
+            !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple)),
+        ),
+      );
+      return inner.concat(...outers);
+    };
   }
 
   private checkAlias(alias: string): void {

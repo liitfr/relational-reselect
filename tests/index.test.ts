@@ -43,6 +43,12 @@ const state = fromJS({
       productId: 120,
       qty: 2,
     },
+    {
+      customer: 12,
+      id: 101,
+      productId: 120,
+      qty: 1,
+    },
   ],
   products: [
     {
@@ -293,6 +299,59 @@ test('Use a orderBy in a query', () => {
         id: 100,
         productId: 50,
         qty: 3,
+      },
+    },
+  ]);
+});
+
+const fullJoin = new Query()
+  .from(customersSelector, 'cust')
+  .fullJoin(ordersSelector2, 'ord')
+  .on(
+    tuple => tuple.getIn(['cust', 'id']) === tuple.getIn(['ord', 'customer']),
+  );
+
+test('Use a fullJoin in a query', () => {
+  expect(fullJoin.run(state).toJS()).toEqual([
+    {
+      cust: {
+        firstName: 'John',
+        id: 1,
+        lastName: 'Doe',
+      },
+      ord: {
+        customer: 1,
+        id: 100,
+        productId: 50,
+        qty: 3,
+      },
+    },
+    {
+      cust: {
+        firstName: 'Bender',
+        id: 3,
+        lastName: 'Rodriguez',
+      },
+      ord: {
+        customer: 3,
+        id: 101,
+        productId: 120,
+        qty: 2,
+      },
+    },
+    {
+      cust: {
+        firstName: 'Homer',
+        id: 2,
+        lastName: 'Simpson',
+      },
+    },
+    {
+      ord: {
+        customer: 12,
+        id: 101,
+        productId: 120,
+        qty: 1,
       },
     },
   ]);
