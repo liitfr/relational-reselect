@@ -1,4 +1,4 @@
-# relational-reselect (💥 WIP)
+# relational-reselect
 
 [![Build Status](https://travis-ci.org/liitfr/relational-reselect.svg?branch=master)](https://travis-ci.org/liitfr/relational-reselect)
 [![Coverage Status](https://coveralls.io/repos/github/liitfr/relational-reselect/badge.svg?branch=master)](https://coveralls.io/github/liitfr/relational-reselect?branch=master)
@@ -13,21 +13,33 @@ With its decarative style, this library aims to facilitate creation of complex s
 import { createSelector } from 'reselect';
 import Query from 'relational-reselect';
 
-const ordersSelector = state => state.get('orders');
-const ordersFrSelector = createSelector(
-  ordersSelector,
-  orders => orders.filter(order => order.get('country') === 'fr'),
+// my selectors
+const a = createSelector(
+  aSelector,
+  aFn,
 );
-const customersSelector = state => state.get('customers');
+const b = createSelector(
+  bSelector,
+  bFn,
+);
+const c = createSelector(
+  cSelector,
+  cFn,
+);
 
-const salesReportFrSelector = new Query()
-  .from(customersSelector, 'cust')
-  .innerJoin(ordersFrSelector, 'ord')
-  .on(
-    tuple => tuple.getIn(['cust', 'id']) === tuple.getIn(['ord', 'customer']),
-  );
+// define my query
+const myQuery = new Query()
+  .from(a, 'a')
+  .leftJoin(b, 'b')
+  .on(row => row.getIn(['a', 'id']) === row.getIn(['b', 'aRef']))
+  .leftJoin(c, 'c')
+  .on(row => row.getIn(['c', 'id']) >= row.getIn(['a', 'cId']));
 
-salesReportFrSelector.run(state);
+// get generated selector
+const mySelector = myQuery.get();
+
+// or directly run it
+const myData = myQuery.run(state);
 ```
 
 other examples are available on dedicated [CodeSandbox](https://codesandbox.io/s/427q264yv0)
@@ -38,49 +50,81 @@ other examples are available on dedicated [CodeSandbox](https://codesandbox.io/s
 npm install --save relational-reselect
 ```
 
-## API
-
-### `const query = new Query()`
-
-To create a new query, this one is fair enough !
-
-### `.select()`
-
-Optional step, if you want to perform cleansing or enrichment over joined data.
-
-### `.from()`
-
-Required step, can consume a proper selector or another query if you want to nest theme. You must provide a data source and its alias as well.
-
-### Joins
-
-Optional step, you can add as much data sources as you want as long as you specify how to join them
-
-#### `.innerJoin()`
-
-#### `.leftJoin()`
-
-#### `.rightJoin()`
-
-#### `.fullJoin()`
-
-#### `.except()`
-
-#### `.intersect()`
-
-#### `.union()`
-
-#### `.cartesian()`
-
-### `.where()`
-
-### Ordering
-
-Optional step, it will proceed over from`` or select
-
-## State Machine Diagram
+## How to write a query ?
 
 ![State Machine diagram](./docs/state.jpg?raw=true 'State Machine diagram')
+
+## API
+
+### Query bloc
+
+#### `new Query()`
+
+Create a new query
+
+#### `get(): Selector`
+
+generate selector for this query
+
+#### `run(state: State): Collection`
+
+run this query (= execute its selector) and return result
+
+### Select bloc
+
+#### `select(selectSpec: SpecificationForTuple): Select`
+
+Optional operation if you need to process data coming from From bloc.
+
+### From bloc
+
+In this bloc, any `dataSource` can be a selector (a simple one or a `reselect` one) or another valid query if you need to nest them.
+`Aliases` are required for naming `dataSources`, except when you use `except`, `intersect`, and `union` joins
+
+#### `from(dataSource: DataSource, alias: string): From`
+
+Required operation.
+
+#### Joins
+
+Optional operation. You can join as much data sources as you want as long as you specify how to join them.
+Supported join types are :
+
+- `innerJoin(dataSource: DataSource, alias: string): IncompleteJoin`
+- `leftJoin(dataSource: DataSource, alias: string): IncompleteJoin`
+- `rightJoin(dataSource: DataSource, alias: string): IncompleteJoin`
+- `fullJoin(dataSource: DataSource, alias: string): IncompleteJoin`
+- `except(dataSource: DataSource): CompleteJoin`
+- `intersect(dataSource: DataSource): CompleteJoin`
+- `union(dataSource: DataSource): CompleteJoin`
+- `cartesian(dataSource: DataSource, alias: string): CompleteJoin`
+
+Incomplete joins need to be completed with a `on(specification: SpecificationForMatchingTuple): CompleteJoin`
+
+### Where bloc
+
+#### `where(whereSpec: SpecificationForMatchingTuple): Where`
+
+Optional operation. This filter will be applied over data coming from From or Select (if exists) bloc
+
+### Ordering bloc
+
+#### `orderBy(orderBySpec: SpecificationForOrderingTuples): OrderBy`
+
+Optional operation. This sort will be applied over data coming from From, or Select (if exists), or Where (if exists) bloc
+
+### Grouping bloc
+
+TODO !
+
+### Specification Types
+
+```
+type Tuple = Map<string, any>;
+type SpecificationForTuple = (tuple: Tuple) => Tuple;
+type SpecificationForMatchingTuple = (tuple: Tuple) => boolean;
+type SpecificationForOrderingTuples = (left: Tuple, right: Tuple) => number;
+```
 
 ## Class Diagram
 
