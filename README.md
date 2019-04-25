@@ -1,8 +1,8 @@
 # relational-reselect (💥 WIP)
 
-![Travis (.org)](https://img.shields.io/travis/liitfr/relational-reselect.svg)
-![Coveralls github](https://img.shields.io/coveralls/github/liitfr/relational-reselect.svg)
-![Codacy grade](https://img.shields.io/codacy/grade/7112f798a4e247c78d531d54a7468837.svg)
+[![Build Status](https://travis-ci.org/liitfr/relational-reselect.svg?branch=master)](https://travis-ci.org/liitfr/relational-reselect)
+[![Coverage Status](https://coveralls.io/repos/github/liitfr/relational-reselect/badge.svg?branch=master)](https://coveralls.io/github/liitfr/relational-reselect?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7112f798a4e247c78d531d54a7468837)](https://app.codacy.com/app/liitfr/relational-reselect?utm_source=github.com&utm_medium=referral&utm_content=liitfr/relational-reselect&utm_campaign=Badge_Grade_Dashboard)
 ![npm bundle size](https://img.shields.io/bundlephobia/min/relational-reselect.svg)
 ![NPM](https://img.shields.io/npm/l/relational-reselect.svg)
 ![npm](https://img.shields.io/npm/v/relational-reselect.svg)

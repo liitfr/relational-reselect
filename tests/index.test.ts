@@ -60,6 +60,12 @@ const state = fromJS({
       label: 'cellphone',
     },
   ],
+  products2: [
+    {
+      id: 120,
+      label: 'cellphone',
+    },
+  ],
 });
 
 const customersSelector = (state: State) => state.get('customers');
@@ -358,13 +364,13 @@ test('Use a fullJoin in a query', () => {
 });
 
 const unionJoin = new Query()
-  .from(ordersSelector, 'ord1')
-  .union(ordersSelector2, 'ord2');
+  .from(ordersSelector, 'ord')
+  .union(ordersSelector2);
 
 test('Use a unionJoin in a query', () => {
   expect(unionJoin.run(state).toJS()).toEqual([
     {
-      ord1: {
+      ord: {
         custId: 1,
         id: 100,
         productId: 50,
@@ -372,7 +378,7 @@ test('Use a unionJoin in a query', () => {
       },
     },
     {
-      ord2: {
+      ord: {
         customer: 1,
         id: 100,
         productId: 50,
@@ -380,7 +386,7 @@ test('Use a unionJoin in a query', () => {
       },
     },
     {
-      ord2: {
+      ord: {
         customer: 3,
         id: 101,
         productId: 120,
@@ -388,11 +394,28 @@ test('Use a unionJoin in a query', () => {
       },
     },
     {
-      ord2: {
+      ord: {
         customer: 12,
         id: 101,
         productId: 120,
         qty: 1,
+      },
+    },
+  ]);
+});
+
+const productsSelector2 = (state: State) => state.get('products2');
+
+const intersectJoin = new Query()
+  .from(productsSelector, 'prod')
+  .intersect(productsSelector2);
+
+test('Use a intersectJoin in a query', () => {
+  expect(intersectJoin.run(state).toJS()).toEqual([
+    {
+      prod: {
+        id: 120,
+        label: 'cellphone',
       },
     },
   ]);

@@ -112,9 +112,9 @@ interface Joinable {
   leftJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
-  /*except(dataSource: DataSource, alias: string): CompleteJoin;
-  intersect(dataSource: DataSource, alias: string): CompleteJoin;*/
-  union(dataSource: DataSource, alias: string): CompleteJoin;
+  /*except(dataSource: DataSource, alias: string): CompleteJoin;*/
+  intersect(dataSource: DataSource): CompleteJoin;
+  union(dataSource: DataSource): CompleteJoin;
   cartesian(dataSource: DataSource, alias: string): CompleteJoin;
 }
 
@@ -130,6 +130,22 @@ abstract class FromNode extends RunableStatement
   implements Joinable, Whereable, OrderByable {
   constructor(context: Query) {
     super(context);
+  }
+
+  private static outerJoinBehaviorGenerator(sides: Symbol[]): Behavior {
+    return (specification: SpecificationForMatchingTuple) => (
+      left: Collection,
+      right: Collection,
+    ) => {
+      const inner = cartesian(left, right).filter(specification);
+      const outers = sides.map(side =>
+        (side === LEFT ? left : right).filter(
+          (lTuple: Tuple) =>
+            !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple)),
+        ),
+      );
+      return inner.concat(...outers);
+    };
   }
 
   public innerJoin(dataSource: DataSource, alias: string): IncompleteJoin {
@@ -153,24 +169,32 @@ abstract class FromNode extends RunableStatement
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  fullJoin(dataSource: DataSource, alias: string): IncompleteJoin {
+  public fullJoin(dataSource: DataSource, alias: string): IncompleteJoin {
     this.checkAlias(alias);
     const behavior = FromNode.outerJoinBehaviorGenerator([LEFT, RIGHT]);
     return new IncompleteJoin(this.context, { dataSource, alias }, behavior);
   }
 
-  /*except(dataSource: DataSource, alias: string): CompleteJoin {
-    this.checkAlias(alias);
-    return new IncompleteJoin(this.context, { dataSource, alias });
-  }
-
-  intersect(dataSource: DataSource, alias: string): CompleteJoin {
+  /*public except(dataSource: DataSource, alias: string): CompleteJoin {
     this.checkAlias(alias);
     return new IncompleteJoin(this.context, { dataSource, alias });
   }*/
 
-  union(dataSource: DataSource, alias: string): CompleteJoin {
-    this.checkAlias(alias);
+  public intersect(dataSource: DataSource): CompleteJoin {
+    const alias: string = this.context.getAliases().last();
+    this.context.addJoinSpec({
+      aliasedDataSource: { dataSource, alias },
+      joinSpec: (left: Collection, right: Collection) => {
+        console.log(left.toJS());
+        return left.filter(lTuple => right.contains(lTuple));
+      },
+    });
+    return new CompleteJoin(this.context);
+  }
+
+  public union(dataSource: DataSource): CompleteJoin {
+    console.log(this.context.getAliases().toJS());
+    const alias: string = this.context.getAliases().last();
     this.context.addJoinSpec({
       aliasedDataSource: { dataSource, alias },
       joinSpec: (left: Collection, right: Collection) => left.concat(right),
@@ -193,22 +217,6 @@ abstract class FromNode extends RunableStatement
 
   public orderBy(orderBySpec: SpecificationForOrderingTuples): OrderBy {
     return new OrderBy(this.context, orderBySpec);
-  }
-
-  private static outerJoinBehaviorGenerator(sides: Symbol[]) {
-    return (specification: SpecificationForMatchingTuple) => (
-      left: Collection,
-      right: Collection,
-    ) => {
-      const inner = cartesian(left, right).filter(specification);
-      const outers = sides.map(side =>
-        (side === LEFT ? left : right).filter(
-          (lTuple: Tuple) =>
-            !inner.find((iTuple: Tuple) => lTuple.isSubset(iTuple)),
-        ),
-      );
-      return inner.concat(...outers);
-    };
   }
 
   private checkAlias(alias: string): void {
@@ -307,7 +315,7 @@ class Query implements Fromable, Runable, Selectable {
   public getAliases(): List<string> {
     const aliases = List().push(this.fromSpec.alias);
     return this.joinSpec
-      ? aliases.push(this.joinSpec.map(join => join.aliasedDataSource.alias))
+      ? aliases.concat(this.joinSpec.map(join => join.aliasedDataSource.alias))
       : aliases;
   }
 
