@@ -356,3 +356,44 @@ test('Use a fullJoin in a query', () => {
     },
   ]);
 });
+
+const unionJoin = new Query()
+  .from(ordersSelector, 'ord1')
+  .union(ordersSelector2, 'ord2');
+
+test('Use a unionJoin in a query', () => {
+  expect(unionJoin.run(state).toJS()).toEqual([
+    {
+      ord1: {
+        custId: 1,
+        id: 100,
+        productId: 50,
+        qty: 3,
+      },
+    },
+    {
+      ord2: {
+        customer: 1,
+        id: 100,
+        productId: 50,
+        qty: 3,
+      },
+    },
+    {
+      ord2: {
+        customer: 3,
+        id: 101,
+        productId: 120,
+        qty: 2,
+      },
+    },
+    {
+      ord2: {
+        customer: 12,
+        id: 101,
+        productId: 120,
+        qty: 1,
+      },
+    },
+  ]);
+});

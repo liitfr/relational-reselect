@@ -113,8 +113,8 @@ interface Joinable {
   rightJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   fullJoin(dataSource: DataSource, alias: string): IncompleteJoin;
   /*except(dataSource: DataSource, alias: string): CompleteJoin;
-  intersect(dataSource: DataSource, alias: string): CompleteJoin;
-  union(dataSource: DataSource, alias: string): CompleteJoin;*/
+  intersect(dataSource: DataSource, alias: string): CompleteJoin;*/
+  union(dataSource: DataSource, alias: string): CompleteJoin;
   cartesian(dataSource: DataSource, alias: string): CompleteJoin;
 }
 
@@ -167,12 +167,16 @@ abstract class FromNode extends RunableStatement
   intersect(dataSource: DataSource, alias: string): CompleteJoin {
     this.checkAlias(alias);
     return new IncompleteJoin(this.context, { dataSource, alias });
-  }
+  }*/
 
   union(dataSource: DataSource, alias: string): CompleteJoin {
     this.checkAlias(alias);
-    return new IncompleteJoin(this.context, { dataSource, alias });
-  }*/
+    this.context.addJoinSpec({
+      aliasedDataSource: { dataSource, alias },
+      joinSpec: (left: Collection, right: Collection) => left.concat(right),
+    });
+    return new CompleteJoin(this.context);
+  }
 
   public cartesian(dataSource: DataSource, alias: string): CompleteJoin {
     this.checkAlias(alias);
