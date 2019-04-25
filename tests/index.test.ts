@@ -22,6 +22,13 @@ const state = fromJS({
       lastName: 'Rodriguez',
     },
   ],
+  customers2: [
+    {
+      firstName: 'Bender',
+      id: 3,
+      lastName: 'Rodriguez',
+    },
+  ],
   orders: [
     {
       custId: 1,
@@ -416,6 +423,24 @@ test('Use a intersectJoin in a query', () => {
       prod: {
         id: 120,
         label: 'cellphone',
+      },
+    },
+  ]);
+});
+
+const customersSelector2 = (state: State) => state.get('customers2');
+
+const exceptJoin = new Query()
+  .from(customersSelector, 'cust')
+  .intersect(customersSelector2);
+
+test('Use a exceptJoin in a query', () => {
+  expect(exceptJoin.run(state).toJS()).toEqual([
+    {
+      cust: {
+        firstName: 'Bender',
+        id: 3,
+        lastName: 'Rodriguez',
       },
     },
   ]);
